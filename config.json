@@ -1,0 +1,65 @@
+{
+	"database_connection":"postgres://postgres:password@localhost/connectrix",
+	"log_level":"debug",
+	"channels":{
+		"http": {
+			"port":"9096"
+		},
+		"irc": {}
+	},
+	"sources":[
+		{
+			"name":"GitHub",
+			"hint":"User-Agent:GitHub-Hookshot",
+			"parser":"json",
+			"events":[
+				{
+					"type":"push",
+					"hint":"X-Github-Event:push",
+					"template":"{{.pusher.name}} committed to {{.repository.name}}:{{.ref}}: {{.head_commit.message}} - {{.head_commit.url}}"
+				}
+			]
+		},
+		{
+			"name":"CircleCI",
+			"hint":"source=circleci",
+			"parser":"json",
+			"events":[
+				{
+					"type":"build",
+					"hint":"event=build",
+					"template":"Build #{{.payload.build_num}} of {{.payload.reponame}}:{{.payload.branch}} by {{.payload.committer_name}} finished with status: {{.payload.outcome}} - {{.payload.build_url}}"
+				}
+			]
+		}
+	],
+	"routes":[
+		{
+			"namespace":"0",
+			"event_source":"GitHub",
+			"event_type":"push",
+			"sub_channel_name":"irc",
+			"sub_channel_args":{"IRC Server":"irc.freenode.net", "IRC Channel":"#connectrix", "Nickname":"connectrix-bot"},
+			"template":"",
+			"rule":"`{{.repository.name}}` == `connectrix`"
+		},
+		{
+			"namespace":"0",
+			"event_source":"CircleCI",
+			"event_type":"build",
+			"sub_channel_name":"irc",
+			"sub_channel_args":{"IRC Server":"irc.freenode.net", "IRC Channel":"#connectrix", "Nickname":"connectrix-bot"},
+			"template":"",
+			"rule":"`{{.payload.reponame}}` == `connectrix`"
+		},
+		{
+			"namespace":"0",
+			"event_source":"CircleCI",
+			"event_type":"build",
+			"sub_channel_name":"http",
+			"sub_channel_args":{"URL":"https://api.github.com/repos/{{.payload.username}}/{{.payload.reponame}}/issues", "Headers":"Authorization:Basic base64(username:pass)"},
+			"template":"{\"title\":\"Build Failed\", \"body\":\"\"}",
+			"rule":"`{{.payload.status}}` == `failed`"
+		}
+	]
+}

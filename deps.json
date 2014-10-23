@@ -1,0 +1,42 @@
+{
+    "github.com/docopt/docopt-go": {
+        "repo": "https://github.com/docopt/docopt.go.git",
+        "version": "5049e98",
+        "type": "git-clone",
+        "alias": "github.com/docopt/docopt-go"
+    },
+    "github.com/lib/pq": {
+        "repo": "https://github.com/lib/pq.git",
+        "version": "b021d0ef20",
+        "type": "git-clone",
+        "alias": "github.com/lib/pq"
+    },
+    "github.com/yasuyuky/jsonpath": {
+        "repo": "https://github.com/yasuyuky/jsonpath.git",
+        "version": "eddfea409b",
+        "type": "git-clone",
+        "alias": "github.com/yasuyuky/jsonpath"
+    },
+    "github.com/stretchr/testify": {
+        "repo": "https://github.com/stretchr/testify.git",
+        "version": "a2e5515d4d",
+        "type": "git-clone",
+        "alias": "github.com/stretchr/testify"
+    },
+    "github.com/diggs/glog": {
+        "repo": "https://github.com/diggs/glog.git",
+        "type": "git-clone",
+        "alias": "github.com/diggs/glog"
+    },
+    "github.com/fluffle/goirc": {
+        "repo": "https://github.com/fluffle/goirc.git",
+        "type": "git-clone",
+        "alias": "github.com/fluffle/goirc"
+    },
+    "gopkg.in/yaml.v1": {
+        "repo": "git@github.com:go-yaml/yaml.git",
+        "version": "feb4ca7964",
+        "type": "git-clone",
+        "alias": "gopkg.in/yaml.v1"
+    }
+}
