@@ -2,6 +2,7 @@ package events
 
 import (
 	// "github.com/tysoft/connectrix/database"
+	"github.com/tysoft/connectrix/config"
 	"github.com/tysoft/connectrix/events/event"
 	"github.com/tysoft/connectrix/parsers"
 	"github.com/tysoft/connectrix/routes"
@@ -14,6 +15,15 @@ func CreateEvent(event *event.Event) (int, error) {
 	return 0, nil
 }
 
+func makeTemplatedEventContent(object interface{}, eventType *config.EventType, eventData *[]byte) (string, error) {
+	if eventType.Template == "" {
+		data_ := *eventData
+		return string(data_[:]), nil
+	} else {
+		return templates.Template(object, eventType.Template)
+	}
+}
+
 func CreateEventFromChannel(pubChannelName string, namespace string, data *[]byte, hints []string) (int, error) {
 
 	object, eventSource, eventType, err := parsers.ParseWithHints(data, hints)
@@ -21,7 +31,7 @@ func CreateEventFromChannel(pubChannelName string, namespace string, data *[]byt
 		return -1, err
 	}
 
-	content, err := templates.Template(object, eventType.Template)
+	content, err := makeTemplatedEventContent(object, eventType, data)
 	if err != nil {
 		return -1, err
 	}
