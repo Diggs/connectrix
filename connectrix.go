@@ -1,12 +1,12 @@
 package main
 
 import (
+	"github.com/diggs/connectrix/channels"
+	"github.com/diggs/connectrix/channels/http"
+	"github.com/diggs/connectrix/channels/irc"
+	"github.com/diggs/connectrix/config"
 	"github.com/diggs/glog"
-	"github.com/tysoft/connectrix/channels"
-	"github.com/tysoft/connectrix/channels/http"
-	"github.com/tysoft/connectrix/channels/irc"
-	"github.com/tysoft/connectrix/config"
-	// "github.com/tysoft/connectrix/database"
+	// "github.com/diggs/connectrix/database"
 	"os"
 )
 

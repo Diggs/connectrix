@@ -3,10 +3,10 @@ package irc
 import (
 	"errors"
 	"fmt"
+	"github.com/diggs/connectrix/channels"
+	"github.com/diggs/connectrix/events/event"
 	"github.com/diggs/glog"
 	irc "github.com/fluffle/goirc/client"
-	"github.com/tysoft/connectrix/channels"
-	"github.com/tysoft/connectrix/events/event"
 	"sync"
 	"time"
 )

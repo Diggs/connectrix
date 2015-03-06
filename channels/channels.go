@@ -3,8 +3,8 @@ package channels
 import (
 	"errors"
 	"fmt"
+	"github.com/diggs/connectrix/config"
 	"github.com/diggs/glog"
-	"github.com/tysoft/connectrix/config"
 )
 
 var pubChannels map[string]PubChannel

@@ -2,8 +2,8 @@ package database
 
 import (
 	"database/sql"
+	"github.com/diggs/connectrix/config"
 	_ "github.com/lib/pq"
-	"github.com/tysoft/connectrix/config"
 )
 
 // database contains a reference to the database, populated via Connect.

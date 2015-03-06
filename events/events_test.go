@@ -1,8 +1,8 @@
 package events
 
 import (
+	"github.com/diggs/connectrix/config"
 	"github.com/stretchr/testify/assert"
-	"github.com/tysoft/connectrix/config"
 	"testing"
 )
 

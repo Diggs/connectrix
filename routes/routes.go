@@ -1,17 +1,14 @@
 package routes
 
 import (
-	"errors"
 	"fmt"
+	"github.com/diggs/connectrix/channels"
+	"github.com/diggs/connectrix/config"
+	"github.com/diggs/connectrix/events/event"
+	"github.com/diggs/connectrix/parsers"
+	"github.com/diggs/connectrix/templates"
 	"github.com/diggs/glog"
-	"github.com/tysoft/connectrix/channels"
-	"github.com/tysoft/connectrix/config"
-	"github.com/tysoft/connectrix/events/event"
-	"github.com/tysoft/connectrix/parsers"
-	"github.com/tysoft/connectrix/rules"
-	"github.com/tysoft/connectrix/templates"
-	"go/token"
-	"strconv"
+	"github.com/diggs/go-eval"
 	"sync"
 )
 
@@ -58,16 +55,9 @@ func processEvent(event *event.Event, route *config.Route, channel channels.SubC
 		if err != nil {
 			return err
 		}
-		result, tk, err := rules.Evaluate(tmplRule)
+		rulePassed, err := goeval.EvalBool(tmplRule)
 		if err != nil {
 			return err
-		}
-		if tk != token.STRING {
-			return errors.New(fmt.Sprintf("Expected result of rule evaluation '%s' to be type STRING but got '%s'", tmplRule, tk.String()))
-		}
-		rulePassed, err := strconv.ParseBool(result)
-		if err != nil {
-			return errors.New(fmt.Sprintf("Expected result of rule evaluation '%s' to parse to a BOOL but got '%s'", tmplRule, err.Error()))
 		}
 		// the rule failed, so we shouldn't send the event
 		if !rulePassed {

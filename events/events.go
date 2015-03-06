@@ -1,12 +1,12 @@
 package events
 
 import (
-	// "github.com/tysoft/connectrix/database"
-	"github.com/tysoft/connectrix/config"
-	"github.com/tysoft/connectrix/events/event"
-	"github.com/tysoft/connectrix/parsers"
-	"github.com/tysoft/connectrix/routes"
-	"github.com/tysoft/connectrix/templates"
+	// "github.com/diggs/connectrix/database"
+	"github.com/diggs/connectrix/config"
+	"github.com/diggs/connectrix/events/event"
+	"github.com/diggs/connectrix/parsers"
+	"github.com/diggs/connectrix/routes"
+	"github.com/diggs/connectrix/templates"
 )
 
 func CreateEvent(event *event.Event) (int, error) {

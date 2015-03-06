@@ -1,7 +1,7 @@
 package channels
 
 import (
-	"github.com/tysoft/connectrix/events/event"
+	"github.com/diggs/connectrix/events/event"
 )
 
 // Info represents a piece of data needed to be passed to an external system to work with a channel

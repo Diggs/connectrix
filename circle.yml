@@ -1,11 +1,11 @@
 test:
   post:
     - cp  $(pwd)/connectrix ${CIRCLE_ARTIFACTS}
-    - cp /home/ubuntu/.go_project/src/github.com/tysoft/connectrix/config.json ${CIRCLE_ARTIFACTS}
+    - cp /home/ubuntu/.go_project/src/github.com/diggs/connectrix/config.json ${CIRCLE_ARTIFACTS}
 
 machine:
   environment:
-    CONNECTRIX_CONFIG_FILE: /home/ubuntu/.go_project/src/github.com/tysoft/connectrix/
+    CONNECTRIX_CONFIG_FILE: /home/ubuntu/.go_project/src/github.com/diggs/connectrix/
 
 notify:
   webhooks:

@@ -3,11 +3,11 @@ package parsers
 import (
 	"errors"
 	"fmt"
+	"github.com/diggs/connectrix/config"
+	"github.com/diggs/connectrix/parsers/json"
+	"github.com/diggs/connectrix/parsers/xml"
+	"github.com/diggs/connectrix/parsers/yaml"
 	"github.com/diggs/glog"
-	"github.com/tysoft/connectrix/config"
-	"github.com/tysoft/connectrix/parsers/json"
-	"github.com/tysoft/connectrix/parsers/xml"
-	"github.com/tysoft/connectrix/parsers/yaml"
 	"regexp"
 )
 
