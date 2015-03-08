@@ -94,6 +94,7 @@ func ParseWithHints(data *[]byte, hints []string) (interface{}, *config.EventSou
 	if err != nil {
 		return nil, nil, nil, err
 	}
+	glog.Debugf("Successfully parsed event: %v", object)
 
 	return object, eventSource, eventType, nil
 }

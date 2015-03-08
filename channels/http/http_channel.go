@@ -97,7 +97,7 @@ func (c HttpChannel) StartSubChannel(config map[string]string) error {
 	return nil
 }
 
-func (c HttpChannel) StartPubChannel(config map[string]string) error {
+func (c HttpChannel) StartPubChannel(config map[string]string, pubChannelArgs []map[string]string) error {
 
 	ignoreHeadersInHints = map[string]int{
 		"Content-Length":   0,

@@ -1,14 +1,17 @@
 package irc
 
 import (
-	"errors"
 	"fmt"
 	"github.com/diggs/connectrix/channels"
+	"github.com/diggs/connectrix/events"
 	"github.com/diggs/connectrix/events/event"
 	"github.com/diggs/glog"
 	irc "github.com/fluffle/goirc/client"
 	"sync"
 	"time"
+	"regexp"
+	"strings"
+	"encoding/json"
 )
 
 const IRC_SERVER string = "IRC Server"
@@ -25,11 +28,16 @@ type IrcChannel struct {
 }
 
 func (IrcChannel) Name() string {
-	return "IRC"
+	return "irc"
 }
 
 func (IrcChannel) Description() string {
-	return "The IRC channel allows events to be sent to IRC chat rooms."
+	return "The IRC channel allows events to be sent and received in IRC chat rooms."
+}
+
+func (ch IrcChannel) PubChannelArgs() []channels.Arg {
+	// Same args needed for pub and sub
+	return ch.SubChannelArgs()
 }
 
 func (IrcChannel) SubChannelArgs() []channels.Arg {
@@ -62,6 +70,14 @@ func (IrcChannel) ValidateSubChannelArgs(args map[string]string) error {
 	return nil
 }
 
+func (ch IrcChannel) ValidatePubChannelArgs(args map[string]string) error {
+	return ch.ValidateSubChannelArgs(args)
+}
+
+func (IrcChannel) PubChannelInfo(map[string]string) []channels.Info {
+	return nil
+}
+
 func (IrcChannel) SubChannelInfo(map[string]string) []channels.Info {
 	return nil
 }
@@ -70,24 +86,77 @@ func (c IrcChannel) StartSubChannel(config map[string]string) error {
 	return nil
 }
 
-func (IrcChannel) Drain(args map[string]string, event *event.Event, content string) error {
+type ircMessage struct {
+	From string
+	Msg string
+	Args map[string]string
+}
 
-	connectionKey := makeConnectionKey(args[IRC_SERVER], args[IRC_CHANNEL], args[NICKNAME])
+func (ch IrcChannel) StartPubChannel(channelArgs map[string]string, pubChannelArgs []map[string]string) error {
 
-	if !currentNodeHasConnection(connectionKey) {
-		if anyNodeHasConnection(connectionKey) {
-			return drainToExternalNode(args, event, content)
-		} else {
-			err := establishConnection(args[IRC_SERVER], args[SERVER_PASSWORD], args[IRC_CHANNEL], args[NICKNAME])
+	for _, args := range pubChannelArgs {
+		go func(args map[string]string) {
+			connection, err := ch.findOrCreateConnection(args[IRC_SERVER], args[SERVER_PASSWORD], args[IRC_CHANNEL], args[NICKNAME])
 			if err != nil {
-				return err
+				glog.Debugf("Unable to establish connection to %s:%s: %v", args[IRC_SERVER], args[IRC_CHANNEL], err)
 			}
-		}
+			connection.HandleFunc("PRIVMSG", func(conn *irc.Conn, line *irc.Line) {
+
+				fromRegex := regexp.MustCompile("^(.+)!~")
+				fromMatches := fromRegex.FindStringSubmatch(line.Src)
+				from := fromMatches[1]
+				msg := strings.TrimLeft(line.Args[1], "@" + args[NICKNAME] + " ")
+
+				argsMap := make(map[string]string)
+				split := strings.Split(msg, " ")
+				for i, str := range split {
+					argsMap[fmt.Sprintf("%d", i)] = str 
+				}
+
+				m := &ircMessage{
+					From:from,
+					Msg:msg,
+					Args:argsMap,
+				}
+
+				bytes, err := json.Marshal(m)
+				if err != nil {
+					errText := fmt.Sprintf("Unable to parse irc message: %v - %v", m, err)
+					glog.Debugf(errText)
+					conn.Privmsg(args[IRC_CHANNEL], errText)
+				}
+
+				_, err = events.CreateEventFromChannel(ch.Name(), "0", &bytes, []string{m.Args["0"]})
+				if err != nil {
+					errText := fmt.Sprintf("Unable to parse irc message: %v - %v", m, err)
+					glog.Debugf(errText)
+					conn.Privmsg(args[IRC_CHANNEL], errText)
+				}
+			})
+		}(args)
 	}
 
-	connection := getConnection(connectionKey)
-	connection.Privmsg(args[IRC_CHANNEL], content)
+	return nil
+}
 
+func (IrcChannel) findOrCreateConnection(server string, password string, ircChannel string, nickname string) (*irc.Conn, error) {
+	connectionKey := makeConnectionKey(server, ircChannel, nickname)
+	if !currentNodeHasConnection(connectionKey) {
+		err := establishConnection(server, password, ircChannel, nickname)
+		if err != nil {
+			return nil, err
+		}
+	}
+	connection := getConnection(connectionKey)
+	return connection, nil
+}
+
+func (ch IrcChannel) Drain(args map[string]string, event *event.Event, content string) error {
+	connection, err := ch.findOrCreateConnection(args[IRC_SERVER], args[SERVER_PASSWORD], args[IRC_CHANNEL], args[NICKNAME])
+	if err != nil {
+		return  err
+	}
+	connection.Privmsg(args[IRC_CHANNEL], content)
 	return nil
 }
 
@@ -104,16 +173,10 @@ func getConnection(connectionKey string) *irc.Conn {
 	return connections.m[connectionKey]
 }
 
-func anyNodeHasConnection(connectionKey string) bool {
-	// TODO Check centralized hash
-	return false
-}
-
 func establishConnection(ircServer string, serverPassword string, ircChannel string, nickname string) error {
 
 	glog.Debugf("Connecting to %s on %s as %s", ircChannel, ircServer, nickname)
 
-	// TODO Add to centralized hash
 	connectionKey := makeConnectionKey(ircServer, ircChannel, nickname)
 
 	// lock the connections map for writing
@@ -165,14 +228,9 @@ func establishConnection(ircServer string, serverPassword string, ircChannel str
 }
 
 func removeConnection(connectionKey string) {
-	// TODO Remove from centralized hash
 	connections.Lock()
 	defer connections.Unlock()
 	delete(connections.m, connectionKey)
-}
-
-func drainToExternalNode(args map[string]string, event *event.Event, content string) error {
-	return errors.New("Not Implemented")
 }
 
 func makeConnectionKey(ircServer string, ircChannel string, nickname string) string {

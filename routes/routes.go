@@ -89,8 +89,10 @@ func RouteEvent(event_ *event.Event) error {
 	once.Do(loadRoutes)
 	key := makeRouteKey(event_.Namespace, event_.Source, event_.Type)
 
+	glog.Debugf("Routing event based on key: %s", key)
 	if _, exists := routesByPub[key]; exists {
 		routes := routesByPub[key]
+		glog.Debugf("Found %d route(s) for key: %s", len(routes), key)
 		for i := range routes {
 			route := routes[i]
 			channel, err := channels.GetSubChannel(route.SubChannelName)

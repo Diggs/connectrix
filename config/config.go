@@ -23,6 +23,8 @@ type EventSource struct {
 	Hint   string
 	Parser string
 	Events []EventType
+	PubChannelName string            `json:"pub_channel_name"`
+	PubChannelArgs map[string]string `json:"pub_channel_args"`
 }
 
 type EventType struct {

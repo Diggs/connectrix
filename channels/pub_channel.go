@@ -7,7 +7,7 @@ type PubChannel interface {
 	// Description returns a description of the channel
 	Description() string
 	// Start initializes the channel
-	StartPubChannel(map[string]string) error
+	StartPubChannel(map[string]string, []map[string]string) error
 	// PubChannelArgs are a a list of names of arguments needed to connect the channel
 	PubChannelArgs() []Arg
 	// ValidatePubChannelArgs validates the supplied channel args

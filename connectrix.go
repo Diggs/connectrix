@@ -29,6 +29,7 @@ func main() {
 	err := channels.LoadChannels(
 		map[string]channels.PubChannel{
 			"http": &http.HttpChannel{},
+			"irc":  &irc.IrcChannel{},
 		},
 		map[string]channels.SubChannel{
 			"http": &http.HttpChannel{},

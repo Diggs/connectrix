@@ -10,6 +10,18 @@ import (
 var pubChannels map[string]PubChannel
 var subChannels map[string]SubChannel
 
+
+func getPubChannelArgs(channelName string) []map[string]string {
+	var pubChannelArgs []map[string]string
+	sources := config.Get().Sources
+	for _, source := range sources {
+		if source.PubChannelName == channelName {
+			pubChannelArgs = append(pubChannelArgs, source.PubChannelArgs)
+		}
+	}
+	return pubChannelArgs
+}
+
 func LoadChannels(pub map[string]PubChannel, sub map[string]SubChannel) error {
 
 	pubChannels = pub
@@ -19,7 +31,9 @@ func LoadChannels(pub map[string]PubChannel, sub map[string]SubChannel) error {
 	for key, val := range pubChannels {
 		go func(name string, channel PubChannel) {
 			glog.Infof("Starting publish channel %s...", name)
-			err := channel.StartPubChannel(config.Get().Channels[name])
+			channel_config := config.Get().Channels[name]
+			channel_args := getPubChannelArgs(name)
+			err := channel.StartPubChannel(channel_config, channel_args)
 			if err != nil {
 				glog.Warningf("%s failed to start publish channel: %s", channel.Name(), err.Error())
 			}
@@ -44,6 +58,6 @@ func GetSubChannel(channelName string) (SubChannel, error) {
 	if channel, exists := subChannels[channelName]; exists {
 		return channel, nil
 	} else {
-		return nil, errors.New(fmt.Sprintf("Unknow channel: %s", channelName))
+		return nil, errors.New(fmt.Sprintf("Unknown channel: %s", channelName))
 	}
 }
