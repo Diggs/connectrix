@@ -97,7 +97,7 @@ func (c HttpChannel) StartSubChannel(config map[string]string) error {
 	return nil
 }
 
-func (c HttpChannel) StartPubChannel(config map[string]string) error {
+func (c HttpChannel) StartPubChannel(config map[string]string, pubChannelArgs []map[string]string) error {
 
 	ignoreHeadersInHints = map[string]int{
 		"Content-Length":   0,
@@ -143,7 +143,7 @@ func (HttpChannel) handleWebRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = events.CreateEventFromChannel(HttpChannel{}.Name(), namespace, &body, getHints(r))
+	_, err = events.ParseAndCreateEventFromChannel(HttpChannel{}.Name(), namespace, &body, getHints(r))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return

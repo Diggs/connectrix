@@ -1,10 +1,7 @@
 package irc
 
 import (
-	"errors"
 	"fmt"
-	"github.com/diggs/connectrix/channels"
-	"github.com/diggs/connectrix/events/event"
 	"github.com/diggs/glog"
 	irc "github.com/fluffle/goirc/client"
 	"sync"
@@ -25,70 +22,23 @@ type IrcChannel struct {
 }
 
 func (IrcChannel) Name() string {
-	return "IRC"
+	return "irc"
 }
 
 func (IrcChannel) Description() string {
-	return "The IRC channel allows events to be sent to IRC chat rooms."
+	return "The IRC channel allows events to be sent and received in IRC chat rooms."
 }
 
-func (IrcChannel) SubChannelArgs() []channels.Arg {
-	return []channels.Arg{
-		channels.Arg{
-			Name:        IRC_SERVER,
-			Description: "The IRC server to connect to.",
-			Required:    true,
-		},
-		channels.Arg{
-			Name:        SERVER_PASSWORD,
-			Description: "The password to connect to the IRC server with.",
-			Default:     "",
-		},
-		channels.Arg{
-			Name:        IRC_CHANNEL,
-			Description: "The IRC channel to connect to.",
-			Required:    true,
-		},
-		channels.Arg{
-			Name:        NICKNAME,
-			Description: "The nickname to connect to the IRC server with.",
-			Required:    true,
-			Default:     "Connectrix",
-		},
-	}
-}
-
-func (IrcChannel) ValidateSubChannelArgs(args map[string]string) error {
-	return nil
-}
-
-func (IrcChannel) SubChannelInfo(map[string]string) []channels.Info {
-	return nil
-}
-
-func (c IrcChannel) StartSubChannel(config map[string]string) error {
-	return nil
-}
-
-func (IrcChannel) Drain(args map[string]string, event *event.Event, content string) error {
-
-	connectionKey := makeConnectionKey(args[IRC_SERVER], args[IRC_CHANNEL], args[NICKNAME])
-
+func (ch IrcChannel) findOrCreateConnection(server string, password string, ircChannel string, nickname string) (*irc.Conn, error) {
+	connectionKey := makeConnectionKey(server, ircChannel, nickname)
 	if !currentNodeHasConnection(connectionKey) {
-		if anyNodeHasConnection(connectionKey) {
-			return drainToExternalNode(args, event, content)
-		} else {
-			err := establishConnection(args[IRC_SERVER], args[SERVER_PASSWORD], args[IRC_CHANNEL], args[NICKNAME])
-			if err != nil {
-				return err
-			}
+		err := ch.establishConnection(server, password, ircChannel, nickname)
+		if err != nil {
+			return nil, err
 		}
 	}
-
 	connection := getConnection(connectionKey)
-	connection.Privmsg(args[IRC_CHANNEL], content)
-
-	return nil
+	return connection, nil
 }
 
 func currentNodeHasConnection(connectionKey string) bool {
@@ -104,16 +54,10 @@ func getConnection(connectionKey string) *irc.Conn {
 	return connections.m[connectionKey]
 }
 
-func anyNodeHasConnection(connectionKey string) bool {
-	// TODO Check centralized hash
-	return false
-}
-
-func establishConnection(ircServer string, serverPassword string, ircChannel string, nickname string) error {
+func (ch IrcChannel) establishConnection(ircServer string, serverPassword string, ircChannel string, nickname string) error {
 
 	glog.Debugf("Connecting to %s on %s as %s", ircChannel, ircServer, nickname)
 
-	// TODO Add to centralized hash
 	connectionKey := makeConnectionKey(ircServer, ircChannel, nickname)
 
 	// lock the connections map for writing
@@ -147,6 +91,7 @@ func establishConnection(ircServer string, serverPassword string, ircChannel str
 	client.HandleFunc("disconnected", func(conn *irc.Conn, line *irc.Line) {
 		glog.Debugf("Disconnected from %s:%s", ircServer, ircChannel)
 		removeConnection(connectionKey)
+		ch.findOrCreateConnection(ircServer, serverPassword, ircChannel, nickname)
 	})
 
 	if err := client.Connect(); err != nil {
@@ -165,14 +110,9 @@ func establishConnection(ircServer string, serverPassword string, ircChannel str
 }
 
 func removeConnection(connectionKey string) {
-	// TODO Remove from centralized hash
 	connections.Lock()
 	defer connections.Unlock()
 	delete(connections.m, connectionKey)
-}
-
-func drainToExternalNode(args map[string]string, event *event.Event, content string) error {
-	return errors.New("Not Implemented")
 }
 
 func makeConnectionKey(ircServer string, ircChannel string, nickname string) string {

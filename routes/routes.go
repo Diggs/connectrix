@@ -5,7 +5,6 @@ import (
 	"github.com/diggs/connectrix/channels"
 	"github.com/diggs/connectrix/config"
 	"github.com/diggs/connectrix/events/event"
-	"github.com/diggs/connectrix/parsers"
 	"github.com/diggs/connectrix/templates"
 	"github.com/diggs/glog"
 	"github.com/diggs/go-eval"
@@ -34,16 +33,11 @@ func loadRoutes() {
 
 func processEvent(event *event.Event, route *config.Route, channel channels.SubChannel) error {
 
-	// parse the raw content of the event that we can use for templating
-	object, err := parsers.Parse(event.RawContent, event.ParserName)
-	if err != nil {
-		return err
-	}
-
-	// template the event, if a custom routing template is specified
+  // template the event, if a custom routing template is specified
+	var err error
 	content := event.Content
 	if route.Template != "" {
-		content, err = templates.Template(object, route.Template)
+		content, err = templates.Template(event.Object, route.Template)
 		if err != nil {
 			return err
 		}
@@ -51,7 +45,7 @@ func processEvent(event *event.Event, route *config.Route, channel channels.SubC
 
 	// evaluate the routing ruile if specified
 	if route.Rule != "" {
-		tmplRule, err := templates.Template(object, route.Rule)
+		tmplRule, err := templates.Template(event.Object, route.Rule)
 		if err != nil {
 			return err
 		}
@@ -68,7 +62,7 @@ func processEvent(event *event.Event, route *config.Route, channel channels.SubC
 	// template each of the routing args
 	templatedSubChannelArgs := make(map[string]string, len(route.SubChannelArgs))
 	for key, val := range route.SubChannelArgs {
-		tmplArg, err := templates.Template(object, val)
+		tmplArg, err := templates.Template(event.Object, val)
 		if err != nil {
 			return err
 		}
@@ -81,6 +75,8 @@ func processEvent(event *event.Event, route *config.Route, channel channels.SubC
 		return err
 	}
 
+	glog.Debugf("Successfully routed event for key: %s", makeRouteKey(event.Namespace, event.Source, event.Type))
+
 	return nil
 }
 
@@ -89,8 +85,10 @@ func RouteEvent(event_ *event.Event) error {
 	once.Do(loadRoutes)
 	key := makeRouteKey(event_.Namespace, event_.Source, event_.Type)
 
+	glog.Debugf("Routing event based on key: %s", key)
 	if _, exists := routesByPub[key]; exists {
 		routes := routesByPub[key]
+		glog.Debugf("Found %d route(s) for key: %s", len(routes), key)
 		for i := range routes {
 			route := routes[i]
 			channel, err := channels.GetSubChannel(route.SubChannelName)

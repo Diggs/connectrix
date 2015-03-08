@@ -6,7 +6,6 @@ import (
 	"github.com/diggs/connectrix/channels/irc"
 	"github.com/diggs/connectrix/config"
 	"github.com/diggs/glog"
-	// "github.com/diggs/connectrix/database"
 	"os"
 )
 
@@ -19,16 +18,11 @@ func main() {
 	glog.SetSeverity(log_level)
 	defer glog.Flush()
 
-	// glog.Info("Connecting to postgres...")
-	// err := database.Connect()
-	// if err != nil {
-	// 	glog.Fatalf("Unable to connect to database: %v", err)
-	// }
-
 	glog.Info("Loading channels...")
 	err := channels.LoadChannels(
 		map[string]channels.PubChannel{
 			"http": &http.HttpChannel{},
+			"irc":  &irc.IrcChannel{},
 		},
 		map[string]channels.SubChannel{
 			"http": &http.HttpChannel{},
@@ -38,6 +32,7 @@ func main() {
 		glog.Fatalf("Unable to load channels: %v", err)
 	}
 
+	// live forever
 	ch := make(chan int)
 	<-ch
 }
