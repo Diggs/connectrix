@@ -10,7 +10,6 @@ import (
 var pubChannels map[string]PubChannel
 var subChannels map[string]SubChannel
 
-
 func getPubChannelArgs(channelName string) []map[string]string {
 	var pubChannelArgs []map[string]string
 	sources := config.Get().Sources

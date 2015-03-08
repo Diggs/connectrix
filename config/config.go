@@ -19,10 +19,10 @@ type ConnectrixConfig struct {
 }
 
 type EventSource struct {
-	Name   string
-	Hint   string
-	Parser string
-	Events []EventType
+	Name           string
+	Hint           string
+	Parser         string
+	Events         []EventType
 	PubChannelName string            `json:"pub_channel_name"`
 	PubChannelArgs map[string]string `json:"pub_channel_args"`
 }
