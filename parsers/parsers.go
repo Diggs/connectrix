@@ -39,7 +39,7 @@ func findEventSource(hints []string) (*config.EventSource, error) {
 	sources := config.Get().Sources
 	for i := range sources {
 		if isPositiveHint(sources[i].Hint, hints) {
-			return &sources[i], nil
+			return sources[i], nil
 		}
 	}
 
@@ -53,13 +53,13 @@ func findEventType(eventSource *config.EventSource, hints []string) (*config.Eve
 		// If the event has a hint try match on that
 		if eventTypes[i].Hint != "" {
 			if isPositiveHint(eventTypes[i].Hint, hints) {
-				return &eventTypes[i], nil
+				return eventTypes[i], nil
 			}
 		}
 		// fall back to matching on the event type itself
 		if isPositiveHint(eventTypes[i].Type, hints) {
-				return &eventTypes[i], nil
-			}
+			return eventTypes[i], nil
+		}
 	}
 
 	return nil, errors.New(fmt.Sprintf("Unable to identify event type using hints '%v'", hints))
@@ -81,7 +81,7 @@ func Parse(data *[]byte, parserName string) (interface{}, error) {
 	return object, nil
 }
 
-func IdentifyWithHints(hints []string) (*config.EventSource, *config.EventType, error)  {
+func IdentifyWithHints(hints []string) (*config.EventSource, *config.EventType, error) {
 	eventSource, err := findEventSource(hints)
 	if err != nil {
 		return nil, nil, err

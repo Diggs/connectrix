@@ -21,7 +21,7 @@ func makeRouteKey(namespace string, eventSource string, eventType string) string
 func loadRoutes() {
 	routes := config.Get().Routes
 	for i := range routes {
-		route := &routes[i]
+		route := routes[i]
 		key := makeRouteKey(route.Namespace, route.EventSource, route.EventType)
 		if _, exists := routesByPub[key]; !exists {
 			routesByPub[key] = []*config.Route{route}
@@ -33,7 +33,7 @@ func loadRoutes() {
 
 func processEvent(event *event.Event, route *config.Route, channel channels.SubChannel) error {
 
-  // template the event, if a custom routing template is specified
+	// template the event, if a custom routing template is specified
 	var err error
 	content := event.Content
 	if route.Template != "" {

@@ -6,5 +6,5 @@ type Event struct {
 	Type       string
 	ParserName string
 	Content    string
-	Object     interface {}
+	Object     interface{}
 }

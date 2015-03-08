@@ -17,7 +17,7 @@ type ircMessage struct {
 	// rawMsg contains the full line received from IRC excluding the nick of the bot e.g. "@bot echo foo" - rawMsg="echo foo"
 	RawMsg string
 	// msg is the raw message without the sender or cmd values
-	Msg  string
+	Msg string
 	// cmd is the first word in msg e.g. "@bot echo foo" - cmd=echo
 	Cmd string
 	// args contains the rawMsg broken in to positional args
@@ -71,7 +71,7 @@ func (ch IrcChannel) connectAndWatch(args map[string]string) {
 			argsMap[fmt.Sprintf("%d", i)] = str
 		}
 
-		m := &ircMessage{Sender: sender, RawMsg: rawMsg, Msg: msg, Args: argsMap,}
+		m := &ircMessage{Sender: sender, RawMsg: rawMsg, Msg: msg, Args: argsMap}
 		rawBytes := []byte(line.Raw)
 
 		// Use the first 'arg' as the only hint - users can then implement routes based on specific commands

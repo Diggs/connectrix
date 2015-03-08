@@ -10,6 +10,7 @@ import (
 var pubChannels map[string]PubChannel
 var subChannels map[string]SubChannel
 
+// TODO move to config.go
 func getPubChannelArgs(channelName string) []map[string]string {
 	var pubChannelArgs []map[string]string
 	sources := config.Get().Sources
@@ -30,7 +31,7 @@ func LoadChannels(pub map[string]PubChannel, sub map[string]SubChannel) error {
 	for key, val := range pubChannels {
 		go func(name string, channel PubChannel) {
 			glog.Infof("Starting publish channel %s...", name)
-			channel_config := config.Get().Channels[name]
+			channel_config := config.Get().Channels[name].Config
 			channel_args := getPubChannelArgs(name)
 			err := channel.StartPubChannel(channel_config, channel_args)
 			if err != nil {
@@ -43,7 +44,7 @@ func LoadChannels(pub map[string]PubChannel, sub map[string]SubChannel) error {
 	for key, val := range subChannels {
 		go func(name string, channel SubChannel) {
 			glog.Infof("Starting subscription channel %s...", name)
-			err := channel.StartSubChannel(config.Get().Channels[name])
+			err := channel.StartSubChannel(config.Get().Channels[name].Config)
 			if err != nil {
 				glog.Warningf("%s failed to start subscription channel: %s", channel.Name(), err.Error())
 			}
