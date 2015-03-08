@@ -3,15 +3,20 @@
 	"log_level":"debug",
 	"channels":{
 		"http": {
-			"port":"9096"
+			"config":{
+				"port":"9096"
+			}
 		},
-		"irc": {}
+		"irc": {
+			"named_args":{
+				"connectrix_irc":{"IRC Server":"irc.freenode.net", "IRC Channel":"#connectrix", "Nickname":"connectrix-bot"}
+			}
+		}
 	},
 	"sources":[
 		{
 			"name":"ConnectrixIRC",
-			"pub_channel_name":"irc",
-			"pub_channel_args":{"IRC Server":"irc.freenode.net", "IRC Channel":"#connectrix", "Nickname":"connectrix-bot"},
+			"named_args":"connectrix_irc",
 			"events":[
 				{
 					"type":"ping"
@@ -51,24 +56,21 @@
 			"namespace":"0",
 			"event_source":"ConnectrixIRC",
 			"event_type":"ping",
-			"sub_channel_name":"irc",
-			"sub_channel_args":{"IRC Server":"irc.freenode.net", "IRC Channel":"#connectrix", "Nickname":"connectrix-bot"},
+			"named_args":"connectrix_irc",
 			"template":"@{{.Sender}} pong"
 		},
 		{
 			"namespace":"0",
 			"event_source":"ConnectrixIRC",
 			"event_type":"echo",
-			"sub_channel_name":"irc",
-			"sub_channel_args":{"IRC Server":"irc.freenode.net", "IRC Channel":"#connectrix", "Nickname":"connectrix-bot"},
+			"named_args":"connectrix_irc",
 			"template":"@{{.Sender}} \"{{.Msg}}\""
 		},
 		{
 			"namespace":"0",
 			"event_source":"GitHub",
 			"event_type":"push",
-			"sub_channel_name":"irc",
-			"sub_channel_args":{"IRC Server":"irc.freenode.net", "IRC Channel":"#connectrix", "Nickname":"connectrix-bot"},
+			"named_args":"connectrix_irc",
 			"template":"",
 			"rule":"`{{.repository.name}}` == `connectrix`"
 		},
@@ -76,8 +78,7 @@
 			"namespace":"0",
 			"event_source":"CircleCI",
 			"event_type":"build",
-			"sub_channel_name":"irc",
-			"sub_channel_args":{"IRC Server":"irc.freenode.net", "IRC Channel":"#connectrix", "Nickname":"connectrix-bot"},
+			"named_args":"connectrix_irc",
 			"template":"",
 			"rule":"`{{.payload.reponame}}` == `connectrix`"
 		},
