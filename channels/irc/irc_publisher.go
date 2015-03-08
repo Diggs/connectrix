@@ -31,13 +31,11 @@ func (ch IrcChannel) PubChannelInfo(args map[string]string) []channels.Info {
 }
 
 func (ch IrcChannel) StartPubChannel(channelArgs map[string]string, pubChannelArgs []map[string]string) error {
-
 	for _, args := range pubChannelArgs {
 		go func(args map[string]string) {
 			ch.connectAndWatch(args)
 		}(args)
 	}
-
 	return nil
 }
 
@@ -45,6 +43,7 @@ func(ch IrcChannel) connectAndWatch(args map[string]string) {
 
 	connection, err := ch.findOrCreateConnection(args[IRC_SERVER], args[SERVER_PASSWORD], args[IRC_CHANNEL], args[NICKNAME])
 	if err != nil {
+		// TODO: Want to add some retrying here...
 		glog.Debugf("Unable to establish connection to %s:%s: %v", args[IRC_SERVER], args[IRC_CHANNEL], err)
 	}
 
