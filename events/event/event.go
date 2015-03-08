@@ -6,5 +6,5 @@ type Event struct {
 	Type       string
 	ParserName string
 	Content    string
-	RawContent *[]byte
+	Object     interface {}
 }

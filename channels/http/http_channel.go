@@ -143,7 +143,7 @@ func (HttpChannel) handleWebRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = events.CreateEventFromChannel(HttpChannel{}.Name(), namespace, &body, getHints(r))
+	_, err = events.ParseAndCreateEventFromChannel(HttpChannel{}.Name(), namespace, &body, getHints(r))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return

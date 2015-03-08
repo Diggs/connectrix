@@ -50,9 +50,16 @@ func findEventType(eventSource *config.EventSource, hints []string) (*config.Eve
 
 	eventTypes := eventSource.Events
 	for i := range eventTypes {
-		if isPositiveHint(eventTypes[i].Hint, hints) {
-			return &eventTypes[i], nil
+		// If the event has a hint try match on that
+		if eventTypes[i].Hint != "" {
+			if isPositiveHint(eventTypes[i].Hint, hints) {
+				return &eventTypes[i], nil
+			}
 		}
+		// fall back to matching on the event type itself
+		if isPositiveHint(eventTypes[i].Type, hints) {
+				return &eventTypes[i], nil
+			}
 	}
 
 	return nil, errors.New(fmt.Sprintf("Unable to identify event type using hints '%v'", hints))
@@ -74,21 +81,30 @@ func Parse(data *[]byte, parserName string) (interface{}, error) {
 	return object, nil
 }
 
-func ParseWithHints(data *[]byte, hints []string) (interface{}, *config.EventSource, *config.EventType, error) {
-
-	glog.Debugf("Attempting to parse event using hints: %v", hints)
-
+func IdentifyWithHints(hints []string) (*config.EventSource, *config.EventType, error)  {
 	eventSource, err := findEventSource(hints)
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, nil, err
 	}
 	glog.Debugf("Identified event source as: %s", eventSource.Name)
 
 	eventType, err := findEventType(eventSource, hints)
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, nil, err
 	}
 	glog.Debugf("Identified event type as: %s", eventType.Type)
+
+	return eventSource, eventType, nil
+}
+
+func ParseWithHints(data *[]byte, hints []string) (interface{}, *config.EventSource, *config.EventType, error) {
+
+	glog.Debugf("Attempting to parse event using hints: %v", hints)
+
+	eventSource, eventType, err := IdentifyWithHints(hints)
+	if err != nil {
+		return nil, nil, nil, err
+	}
 
 	object, err := Parse(data, eventSource.Parser)
 	if err != nil {

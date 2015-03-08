@@ -1,7 +1,7 @@
 package irc
 
 import (
-	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/diggs/connectrix/channels"
 	"github.com/diggs/connectrix/events"
@@ -9,12 +9,18 @@ import (
 	irc "github.com/fluffle/goirc/client"
 	"regexp"
 	"strings"
-	"error"
 )
 
 type ircMessage struct {
-	From string
+	// sender contains the nick of the sender
+	Sender string
+	// rawMsg contains the full line received from IRC excluding the nick of the bot e.g. "@bot echo foo" - rawMsg="echo foo"
+	RawMsg string
+	// msg is the raw message without the sender or cmd values
 	Msg  string
+	// cmd is the first word in msg e.g. "@bot echo foo" - cmd=echo
+	Cmd string
+	// args contains the rawMsg broken in to positional args
 	Args map[string]string
 }
 
@@ -39,7 +45,7 @@ func (ch IrcChannel) StartPubChannel(channelArgs map[string]string, pubChannelAr
 	return nil
 }
 
-func(ch IrcChannel) connectAndWatch(args map[string]string) {
+func (ch IrcChannel) connectAndWatch(args map[string]string) {
 
 	connection, err := ch.findOrCreateConnection(args[IRC_SERVER], args[SERVER_PASSWORD], args[IRC_CHANNEL], args[NICKNAME])
 	if err != nil {
@@ -49,36 +55,28 @@ func(ch IrcChannel) connectAndWatch(args map[string]string) {
 
 	connection.HandleFunc(irc.PRIVMSG, func(conn *irc.Conn, line *irc.Line) {
 
-		fromRegex := regexp.MustCompile("^(.+)!~")
-		fromMatches := fromRegex.FindStringSubmatch(line.Src)
-		if len(fromMatches) !== 2 {
-			ch.handleIrcError(args[IRC_CHANNEL], conn, line, new error("Unable to determine message sender."))
+		senderRegex := regexp.MustCompile("^(.+)!~")
+		senderMatches := senderRegex.FindStringSubmatch(line.Src)
+		if len(senderMatches) != 2 {
+			ch.handleIrcError(args[IRC_CHANNEL], conn, line, errors.New("Unable to determine message sender."))
 			return
 		}
-		from := fromMatches[1]
-		msg := strings.TrimLeft(line.Args[1], "@"+args[NICKNAME]+" ")
+		sender := senderMatches[1]
+		rawMsg := strings.Replace(line.Args[1], "@"+args[NICKNAME]+" ", "", 1)
+		msg := strings.Join(strings.Split(rawMsg, " ")[1:], " ")
 
 		argsMap := make(map[string]string)
-		split := strings.Split(msg, " ")
+		split := strings.Split(rawMsg, " ")
 		for i, str := range split {
 			argsMap[fmt.Sprintf("%d", i)] = str
 		}
 
-		m := &ircMessage{
-			From: from,
-			Msg:  msg,
-			Args: argsMap,
-		}
-
-		bytes, err := json.Marshal(m)
-		if err != nil {
-			ch.handleIrcError(args[IRC_CHANNEL], conn, line, err)
-			return
-		}
+		m := &ircMessage{Sender: sender, RawMsg: rawMsg, Msg: msg, Args: argsMap,}
+		rawBytes := []byte(line.Raw)
 
 		// Use the first 'arg' as the only hint - users can then implement routes based on specific commands
 		// TODO: How to support namespaces for multitenancy? Could base it on server/channel/nick tuple
-		_, err = events.CreateEventFromChannel(ch.Name(), "0", &bytes, []string{m.Args["0"]})
+		_, err = events.CreateEventFromChannel(ch.Name(), "0", m, &rawBytes, []string{m.Args["0"]})
 		if err != nil {
 			ch.handleIrcError(args[IRC_CHANNEL], conn, line, err)
 			return
@@ -86,7 +84,7 @@ func(ch IrcChannel) connectAndWatch(args map[string]string) {
 	})
 }
 
-func(ch IrcChannel) handleIrcError(ircChannel string, connection *irc.Conn, line *irc.Line, err error) {
+func (ch IrcChannel) handleIrcError(ircChannel string, connection *irc.Conn, line *irc.Line, err error) {
 	errText := fmt.Sprintf("Unable to handle line: %v - %v", line, err)
 	glog.Warningf(errText)
 	connection.Privmsg(ircChannel, errText)
