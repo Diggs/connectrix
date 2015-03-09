@@ -24,19 +24,19 @@ type ircMessage struct {
 	Args map[string]string
 }
 
-func (ch IrcChannel) PubChannelArgs() []channels.Arg {
+func (ch *IrcChannel) PubChannelArgs() []*channels.Arg {
 	return ch.SubChannelArgs() // Same args needed for pub and sub
 }
 
-func (ch IrcChannel) ValidatePubChannelArgs(args map[string]string) error {
+func (ch *IrcChannel) ValidatePubChannelArgs(args map[string]string) error {
 	return ch.ValidateSubChannelArgs(args)
 }
 
-func (ch IrcChannel) PubChannelInfo(args map[string]string) []channels.Info {
+func (ch *IrcChannel) PubChannelInfo(args map[string]string) []*channels.Info {
 	return ch.SubChannelInfo(args)
 }
 
-func (ch IrcChannel) StartPubChannel(channelArgs map[string]string, pubChannelArgs []map[string]string) error {
+func (ch *IrcChannel) StartPubChannel(channelArgs map[string]string, pubChannelArgs []map[string]string) error {
 	for _, args := range pubChannelArgs {
 		go func(args map[string]string) {
 			ch.connectAndWatch(args)
@@ -45,7 +45,7 @@ func (ch IrcChannel) StartPubChannel(channelArgs map[string]string, pubChannelAr
 	return nil
 }
 
-func (ch IrcChannel) connectAndWatch(args map[string]string) {
+func (ch *IrcChannel) connectAndWatch(args map[string]string) {
 
 	connection, err := ch.findOrCreateConnection(args[IRC_SERVER], args[SERVER_PASSWORD], args[IRC_CHANNEL], args[NICKNAME])
 	if err != nil {
@@ -84,7 +84,7 @@ func (ch IrcChannel) connectAndWatch(args map[string]string) {
 	})
 }
 
-func (ch IrcChannel) handleIrcError(ircChannel string, connection *irc.Conn, line *irc.Line, err error) {
+func (ch *IrcChannel) handleIrcError(ircChannel string, connection *irc.Conn, line *irc.Line, err error) {
 	errText := fmt.Sprintf("Unable to handle line: %v - %v", line, err)
 	glog.Warningf(errText)
 	connection.Privmsg(ircChannel, errText)

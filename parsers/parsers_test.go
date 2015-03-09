@@ -4,12 +4,13 @@ import (
 	"encoding/json"
 	"github.com/stretchr/testify/assert"
 	"testing"
+  "fmt"
 )
 
 func TestIdentifiesEventSource(t *testing.T) {
 
-	trueSourceHints := []string{"User-Agent:GitHub-Hookshot", "User-Agent:GitHub-Hookshot/", "User-Agent:GitHub-Hookshot/5684589df"}
-	falseSourceHints := []string{"User-Agent", "GitHub-Hookshot", "GitHub"}
+	trueSourceHints := []string{"GitHub-Hookshot", "GitHub", "User-Agent:GitHub-Hookshot", "User-Agent:GitHub-Hookshot/", "User-Agent:GitHub-Hookshot/5684589df"}
+	falseSourceHints := []string{"User-Agent", "Hookshot", "Git"}
 
 	for i := range falseSourceHints {
 		_, err := findEventSource([]string{falseSourceHints[i]})
@@ -19,7 +20,7 @@ func TestIdentifiesEventSource(t *testing.T) {
 	for i := range trueSourceHints {
 		eventSource, err := findEventSource([]string{trueSourceHints[i]})
 		assert.Nil(t, err)
-		assert.Equal(t, eventSource.Name, "GitHub", "Expected event source to be identified as GitHub")
+		assert.Equal(t, "GitHub", eventSource.Name, "Expected event source to be identified as GitHub")
 	}
 }
 

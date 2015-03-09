@@ -38,7 +38,14 @@ func findEventSource(hints []string) (*config.EventSource, error) {
 
 	sources := config.Get().Sources
 	for i := range sources {
-		if isPositiveHint(sources[i].Hint, hints) {
+		// if the source has a hint try match on that
+		if sources[i].Hint != "" {
+			if isPositiveHint(sources[i].Hint, hints) {
+				return sources[i], nil
+			}
+		}
+		// fall back to matching on the source itself
+		if isPositiveHint(sources[i].Name, hints) {
 			return sources[i], nil
 		}
 	}
@@ -50,7 +57,7 @@ func findEventType(eventSource *config.EventSource, hints []string) (*config.Eve
 
 	eventTypes := eventSource.Events
 	for i := range eventTypes {
-		// If the event has a hint try match on that
+		// if the event has a hint try match on that
 		if eventTypes[i].Hint != "" {
 			if isPositiveHint(eventTypes[i].Hint, hints) {
 				return eventTypes[i], nil
