@@ -161,13 +161,114 @@ http://foo.com/bar?source=circle&event=build
 Then you could match it with the hint "source=circleci" or "event=build"
 
 #### Args
-
- * URL - The URL to post to.
+### Subscribe Args
+ * URL - The URL to post events to.
  * Headers - A comma seperated listed of headers as HeaderName:HeaderValue
  * Self Signed Cert - Set to true to allow URL to be using a self signed cert
 
+### Publish Args
+The HTTP channel doesn't need any publish args.
+
 ### IRC Channel
+
+The IRC channel allows events to be sent and received in IRC chat rooms. When receiving events the IRC channel expects them so be in the following format:
+
+```@<nickname> <command> <args>```
+
+For example:
+
+```@connectrix-bot ping``` or ```@connectrix-bot echo foobar```
+
+Which, when paired with the following event types and routes:
+
+```
+"sources":[
+		{
+			"name":"ConnectrixIRC",
+			"hint":"irc.freenode.net:#connectrix:connectrix-bot",
+			"named_args":"connectrix_irc",
+			"events":[
+				{
+					"type":"ping"
+				},
+				{
+					"type":"echo"
+				}
+			]
+		},
+		...
+```
+
+```
+"routes":[
+		{
+			"namespace":"0",
+			"event_source":"ConnectrixIRC",
+			"event_type":"ping",
+			"named_args":"connectrix_irc",
+			"template":"@{{.Sender}} pong"
+		},
+		{
+			"namespace":"0",
+			"event_source":"ConnectrixIRC",
+			"event_type":"echo",
+			"named_args":"connectrix_irc",
+			"template":"@{{.Sender}} \"{{.Msg}}\""
+		},
+		...
+```
+
+Results in:
+
+```
+diggs: @connectrix-bot ping
+connectrix-bot: @diggs pong
+
+diggs: @connectrix-bot echo foobar
+connectrix-bot: @diggs "foobar"
+```
 
 #### Hints
 
+The IRC channel uses the server, channel name, bot nickname, server:channel:nickname tuple and the <cmd> arg as hints.
+
+For example, if the IRC channel was configured to receive events from ```"IRC Server":"irc.freenode.net", "IRC Channel":"#connectrix", "Nickname":"connectrix-bot"``` then the event source could be identified with this hint:
+
+```
+"sources":[
+		{
+			"name":"ConnectrixIRC",
+			"hint":"irc.freenode.net:#connectrix:connectrix-bot",
+			...
+```
+
+And if a message was sent as:
+
+```@connectrix-bot ping```
+
+Then the event type could be identified using:
+
+```
+"sources":[
+		{
+			"name":"ConnectrixIRC",
+			"hint":"irc.freenode.net:#connectrix:connectrix-bot",
+			"named_args":"connectrix_irc",
+			"events":[
+				{
+					"hint":"ping",
+					"type":"ping"
+				}
+```
+
+Note the "hint" in this case is optional, as Connectrix will automatically attempt to identify the event type by matching all event names against the hints provided by the channel, and as the IRC channel provides the <cmd> args as a hint Connectrix successfully matches it.
+
 #### Args
+### Subscribe Args
+ * IRC Server - The IRC server to connect to.
+ * IRC Channel - The IRC channel to connect to, with preceeding '#'
+ * Nickname - The nickname the bot should use when it joins the IRC channel.
+ * Server Password - The password to use to connect to the IRC server (optional)
+
+### Publish Args
+The IRC channel uses the sames args for publish and subscribe.

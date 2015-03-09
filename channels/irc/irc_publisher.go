@@ -73,7 +73,7 @@ func (ch *IrcChannel) connectAndWatch(args map[string]string) {
 
 		m := &ircMessage{Sender: sender, RawMsg: rawMsg, Msg: msg, Args: argsMap}
 		rawBytes := []byte(line.Raw)
-		hints := getHints(args, m)
+		hints := ch.getHints(args, m)
 
 		// TODO: How to support namespaces for multitenancy? Could base it on server/channel/nick tuple
 		_, err = events.CreateEventFromChannel(ch.Name(), "0", m, &rawBytes, hints)
@@ -84,7 +84,7 @@ func (ch *IrcChannel) connectAndWatch(args map[string]string) {
 	})
 }
 
-func getHints(args map[string]string, msg *ircMessage) []string {
+func (ch *IrcChannel) getHints(args map[string]string, msg *ircMessage) []string {
 	serverTuple := strings.Join([]string{args[IRC_SERVER], args[IRC_CHANNEL], args[NICKNAME]}, ":")
 	return []string{args[IRC_SERVER], args[IRC_CHANNEL], args[NICKNAME], serverTuple, msg.Args["0"]}
 }
