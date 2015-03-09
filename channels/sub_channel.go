@@ -28,11 +28,11 @@ type SubChannel interface {
 	// StartSubChannel initializes the channel
 	StartSubChannel(map[string]string) error
 	// SubChannelArgs are a a list of names of arguments needed to connect the channel
-	SubChannelArgs() []Arg
+	SubChannelArgs() []*Arg
 	// ValidateSubChannelArgs validates the supplied channel args
 	ValidateSubChannelArgs(map[string]string) error
 	// SubChannelInfo returns info needed to configure the channel
-	SubChannelInfo(map[string]string) []Info
+	SubChannelInfo(map[string]string) []*Info
 	// Drain pushes an event to an external system
 	Drain(map[string]string, *event.Event, string) error
 }
