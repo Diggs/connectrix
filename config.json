@@ -16,6 +16,7 @@
 	"sources":[
 		{
 			"name":"ConnectrixIRC",
+			"hint":"irc.freenode.net:#connectrix:connectrix-bot",
 			"named_args":"connectrix_irc",
 			"events":[
 				{

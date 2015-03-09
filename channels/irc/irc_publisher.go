@@ -73,15 +73,20 @@ func (ch *IrcChannel) connectAndWatch(args map[string]string) {
 
 		m := &ircMessage{Sender: sender, RawMsg: rawMsg, Msg: msg, Args: argsMap}
 		rawBytes := []byte(line.Raw)
+		hints := getHints(args, m)
 
-		// Use the first 'arg' as the only hint - users can then implement routes based on specific commands
 		// TODO: How to support namespaces for multitenancy? Could base it on server/channel/nick tuple
-		_, err = events.CreateEventFromChannel(ch.Name(), "0", m, &rawBytes, []string{m.Args["0"]})
+		_, err = events.CreateEventFromChannel(ch.Name(), "0", m, &rawBytes, hints)
 		if err != nil {
 			ch.handleIrcError(args[IRC_CHANNEL], conn, line, err)
 			return
 		}
 	})
+}
+
+func getHints(args map[string]string, msg *ircMessage) []string {
+	serverTuple := strings.Join([]string{args[IRC_SERVER], args[IRC_CHANNEL], args[NICKNAME]}, ":")
+	return []string{args[IRC_SERVER], args[IRC_CHANNEL], args[NICKNAME], serverTuple, msg.Args["0"]}
 }
 
 func (ch *IrcChannel) handleIrcError(ircChannel string, connection *irc.Conn, line *irc.Line, err error) {

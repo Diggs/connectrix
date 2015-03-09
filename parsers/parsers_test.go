@@ -2,9 +2,9 @@ package parsers
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/stretchr/testify/assert"
 	"testing"
-  "fmt"
 )
 
 func TestIdentifiesEventSource(t *testing.T) {
